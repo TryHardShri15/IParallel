@@ -1,0 +1,91 @@
+#include <iostream>
+#include <vector>
+#include <limits>
+#include <omp.h>
+
+using namespace std;
+
+#define INF numeric_limits<int>::max()
+
+// Function to find the vertex with the minimum distance value
+int minDistance(vector<int>& dist, vector<bool>& sptSet, int V) {
+    int min = INF, min_index = -1;
+
+    #pragma omp parallel for
+    for (int v = 0; v < V; v++) {
+        if (!sptSet[v] && dist[v] <= min) {
+            #pragma omp critical
+            {
+                if (dist[v] < min) {
+                    min = dist[v];
+                    min_index = v;
+                }
+            }
+        }
+    }
+    return min_index;
+}
+
+// Dijkstra's Algorithm using OpenMP for parallelism
+void dijkstra(vector<vector<int>>& graph, int src, int V) {
+    vector<int> dist(V, INF);      // Shortest distance array
+    vector<bool> sptSet(V, false); // True if vertex is included in shortest path tree
+
+    dist[src] = 0;
+
+    for (int count = 0; count < V - 1; count++) {
+        int u = minDistance(dist, sptSet, V);
+        if (u == -1) break; // If no minimum found, stop
+
+        sptSet[u] = true;
+
+        #pragma omp parallel for
+        for (int v = 0; v < V; v++) {
+            if (!sptSet[v] && graph[u][v] && dist[u] != INF && dist[u] + graph[u][v] < dist[v]) {
+                dist[v] = dist[u] + graph[u][v];
+            }
+        }
+    }
+
+    // Display the shortest distances
+    cout << "\nShortest distances from source vertex " << src << ":\n";
+    cout << "-------------------------------------------\n";
+    cout << "Vertex\t\tDistance from Source\n";
+    cout << "-------------------------------------------\n";
+    for (int i = 0; i < V; i++) {
+        if (dist[i] == INF)
+            cout << i << "\t\t\t\t\t" << "Not Reachable" << endl;
+        else
+            cout << i << "\t\t\t\t\t" << dist[i] << endl;
+    }
+    cout << "-------------------------------------------\n";
+}
+
+int main() {
+    int V, E;
+    cout << "Enter the number of vertices: ";
+    cin >> V;
+    cout << "Enter the number of edges: ";
+    cin >> E;
+
+    vector<vector<int>> graph(V, vector<int>(V, 0));
+
+    cout << "\nEnter edges in the format (source destination weight):\n";
+    for (int i = 0; i < E; i++) {
+        int u, v, w;
+        cout << "Edge " << i + 1 << ": ";
+        cin >> u >> v >> w;
+        graph[u][v] = w;
+        graph[v][u] = w; // Assuming an undirected graph
+    }
+
+    int src;
+    cout << "\nEnter the source vertex: ";
+    cin >> src;
+
+    dijkstra(graph, src, V);
+
+    return 0;
+}
+
+

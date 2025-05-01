@@ -1,0 +1,78 @@
+#include <iostream>
+#include <vector>
+#include <chrono>
+#include <omp.h>
+#include <cstdlib> // For rand()
+#include <ctime>   // For time()
+
+using namespace std;
+
+int main() {
+    int n;
+    cout << "Enter size of the square matrices (n x n): ";
+    cin >> n;
+
+    vector<vector<int>> A(n, vector<int>(n));
+    vector<vector<int>> B(n, vector<int>(n));
+    vector<vector<int>> C_serial(n, vector<int>(n, 0));
+    vector<vector<int>> C_parallel(n, vector<int>(n, 0));
+
+    srand(time(0)); // Seed for random number generation
+
+    // Fill matrices A and B with random values
+    for (int i = 0; i < n; i++) 
+        for (int j = 0; j < n; j++) {
+            A[i][j] = rand() % 100; // Random numbers between 0 and 99
+            B[i][j] = rand() % 100;
+        }
+
+    // Serial matrix multiplication
+    auto start_serial = chrono::high_resolution_clock::now();
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            int sum = 0;
+            for (int k = 0; k < n; k++) {
+                sum += A[i][k] * B[k][j];
+            }
+            C_serial[i][j] = sum;
+        }
+    }
+    auto end_serial = chrono::high_resolution_clock::now();
+    auto duration_serial = chrono::duration_cast<chrono::milliseconds>(end_serial - start_serial);
+
+    // Parallel matrix multiplication using collapse(2)
+    auto start_parallel = chrono::high_resolution_clock::now();
+    #pragma omp parallel for collapse(2)
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            int sum = 0;
+            for (int k = 0; k < n; k++) {
+                sum += A[i][k] * B[k][j];
+            }
+            C_parallel[i][j] = sum;
+        }
+    }
+    auto end_parallel = chrono::high_resolution_clock::now();
+    auto duration_parallel = chrono::duration_cast<chrono::milliseconds>(end_parallel - start_parallel);
+
+    cout << "\nTime taken for SERIAL matrix multiplication: " << duration_serial.count() << " milliseconds" << endl;
+    cout << "Time taken for PARALLEL matrix multiplication (collapse(2)): " << duration_parallel.count() << " milliseconds" << endl;
+
+    // Optional: Check if both results are the same
+    bool correct = true;
+    for (int i = 0; i < n && correct; i++) {
+        for (int j = 0; j < n && correct; j++) {
+            if (C_serial[i][j] != C_parallel[i][j]) {
+                correct = false;
+            }
+        }
+    }
+
+    if (correct) {
+        cout << "✅ Parallel result matches Serial result!" << endl;
+    } else {
+        cout << "❌ Mismatch found between Serial and Parallel results!" << endl;
+    }
+
+    return 0;
+}

@@ -1,0 +1,65 @@
+----------------Output [ BFS ]:----------------
+a)
+Enter the number of vertices: 6
+Enter the number of edges: 7
+
+Enter 7 edges (format: u v):
+Edge 1: 0 1
+Edge 2: 0 2
+Edge 3: 1 3
+Edge 4: 1 4
+Edge 5: 2 4
+Edge 6: 3 5
+Edge 7: 4 5
+
+Enter the starting node for BFS: 1
+
+Parallel BFS Traversal:
+1 0 3 4 2 5 
+
+b)
+Enter the number of vertices: 5
+Enter the number of edges: 7
+
+Enter 7 edges (format: u v):
+Edge 1: 0 1
+Edge 2: 1 2
+Edge 3: 0 2
+Edge 4: 0 3
+Edge 5: 1 3
+Edge 6: 3 4
+Edge 7: 2 4
+
+Enter the starting node for BFS: 0
+
+Parallel BFS Traversal:
+0 1 2 3 4 
+
+----------------Output [ DIJKSTRA'S ]:----------------
+a)
+Enter the number of vertices: 5
+Enter the number of edges: 7
+
+Enter edges in the format (source destination weight):
+Edge 1: 0 1 7
+Edge 2: 0 2 3
+Edge 3: 1 4 4
+Edge 4: 2 4 6
+Edge 5: 0 3 5
+Edge 6: 4 3 6
+Edge 7: 2 3 1
+
+Enter the source vertex: 0
+
+Shortest distances from source vertex 0:
+-------------------------------------------
+Vertex		Distance from Source
+-------------------------------------------
+0					0
+1					7
+2					3
+3					4
+4					9
+-------------------------------------------
+
+b)

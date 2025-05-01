@@ -1,0 +1,105 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <omp.h>
+#include <chrono>
+
+#define NUM_BINS 10    // Fixed number of histogram bins
+#define NUM_THREADS 4  // Number of OpenMP threads
+
+// Function to compute the bin index for a given value
+int getBinIndex(int value, int minValue, int maxValue) {
+    return (NUM_BINS * (value - minValue)) / (maxValue - minValue + 1);
+}
+
+// Parallel Histogram Sort
+void histogramSort(std::vector<int>& arr) {
+    int n = arr.size();
+    if (n == 0) return; // Empty array check
+
+    int minValue = *std::min_element(arr.begin(), arr.end());
+    int maxValue = *std::max_element(arr.begin(), arr.end());
+
+    // Step 1: Compute histogram
+    std::vector<int> histogram(NUM_BINS, 0);
+    #pragma omp parallel for num_threads(NUM_THREADS) reduction(+:histogram[:NUM_BINS])
+    for (int i = 0; i < n; i++) {
+        int binIndex = getBinIndex(arr[i], minValue, maxValue);
+        histogram[binIndex]++;
+    }
+
+    // Step 2: Compute prefix sum
+    std::vector<int> prefixSum(NUM_BINS, 0);
+    prefixSum[0] = histogram[0];
+    for (int i = 1; i < NUM_BINS; i++) {
+        prefixSum[i] = prefixSum[i - 1] + histogram[i];
+    }
+
+    // Step 3: Distribute elements into bins
+    std::vector<std::vector<int>> bins(NUM_BINS);
+
+    // Pre-create private_bins correctly
+    std::vector<std::vector<std::vector<int>>> private_bins(NUM_THREADS, std::vector<std::vector<int>>(NUM_BINS));
+
+    #pragma omp parallel num_threads(NUM_THREADS)
+    {
+        int tid = omp_get_thread_num();
+        // DO NOT RESIZE here!
+
+        #pragma omp for nowait
+        for (int i = 0; i < n; i++) {
+            int binIndex = getBinIndex(arr[i], minValue, maxValue);
+            private_bins[tid][binIndex].push_back(arr[i]);
+        }
+    }
+
+    // Merge private bins into global bins
+    for (int t = 0; t < NUM_THREADS; t++) {
+        for (int b = 0; b < NUM_BINS; b++) {
+            bins[b].insert(bins[b].end(), private_bins[t][b].begin(), private_bins[t][b].end());
+        }
+    }
+
+    // Step 4: Sort each bin in parallel
+    #pragma omp parallel for num_threads(NUM_THREADS)
+    for (int i = 0; i < NUM_BINS; i++) {
+        std::sort(bins[i].begin(), bins[i].end());
+    }
+
+    // Step 5: Merge sorted bins back to the original array
+    int index = 0;
+    for (int i = 0; i < NUM_BINS; i++) {
+        for (int val : bins[i]) {
+            arr[index++] = val;
+        }
+    }
+}
+
+int main() {
+    // Generate random array
+    int n;
+    std::cout << "Enter the number of elements: ";
+    std::cin >> n;
+    std::vector<int> arr(n);
+
+    for (int i = 0; i < n; i++) {
+        arr[i] = rand() % 1000; // Random numbers from 0 to 999
+    }
+
+    std::cout << "\nOriginal array (first 20 elements): ";
+    for (int i = 0; i < std::min(20, n); i++) std::cout << arr[i] << " ";
+    std::cout << "\n";
+
+    auto start = std::chrono::high_resolution_clock::now();
+    histogramSort(arr);
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+
+    std::cout << "\nSorted array (first 20 elements): ";
+    for (int i = 0; i < std::min(20, n); i++) std::cout << arr[i] << " ";
+    std::cout << "\n";
+
+    std::cout << "\nTime taken for histogram sort: " << duration.count() << " milliseconds.\n";
+
+    return 0;
+}

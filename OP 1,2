@@ -1,0 +1,51 @@
+----------------Output 1 [ MATRIX X MATRIX ]:----------------
+
+a)
+Enter size of the square matrices (n x n): 300
+
+Time taken for SERIAL matrix multiplication: 306 milliseconds
+Time taken for PARALLEL matrix multiplication (collapse(2)): 270 milliseconds
+✅ Parallel result matches Serial result!
+
+b)
+Enter size of the square matrices (n x n): 400
+
+Time taken for SERIAL matrix multiplication: 732 milliseconds
+Time taken for PARALLEL matrix multiplication (collapse(2)): 1060 milliseconds
+✅ Parallel result matches Serial result!
+
+----------------Output 2 [ HISTOGRAM ]:----------------
+
+a)
+
+Enter the number of elements: 30
+
+Original array (first 20 elements): 
+492 98 775 354 278 
+445 660 526 110 872 
+643 782 279 158 317 
+60 459 876 730 424 
+Sorted array (first 20 elements): 
+60 98 110 158 278 
+279 317 354 424 445 
+459 492 526 643 660 
+730 775 782 872 876 
+
+Time taken for histogram sort: 5 milliseconds.
+
+b)
+
+Enter the number of elements: 20
+
+Original array (first 20 elements): 
+843 279 760 849 189 
+463 540 820 136 374 
+712 198 653 404 276 
+471 626 779 448 674 
+Sorted array (first 20 elements): 
+136 189 198 276 279 
+374 404 448 463 471 
+540 626 653 674 712 
+760 779 820 843 849 
+
+Time taken for histogram sort: 4 milliseconds.
